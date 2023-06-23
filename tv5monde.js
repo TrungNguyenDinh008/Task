@@ -14,21 +14,26 @@ const lessonPath = paths[6]; // file name
 const folderPath = `./${langPath}/${exercicesPath}/${levelPath}`; // to make path, create directory
 const exercicePath = `${langPath}/exercice/`; // exercice path (link to first exercices)
 const videosPath = `${langPath}/videos`;
-
-readline1.question(
-  `You need to install these modules: Cheerio, Axios\nDo you want to install these modules?\nType "n" if you are have it already\n[Y/n]\n`,
+try{
+ allHappenInHere();
+ readline1.close();
+}
+catch(error){
+  readline1.question(
+  `You need to install these modules: Cheerio, Axios\nDo you want to install these modules?\n[Y/n]\n`,
   (respond) => {
     if (respond.toLocaleLowerCase() === "y") {
       cP.execSync("npm install cheerio", { stdio: [0, 1, 2] });
       cP.execSync("npm install axios", { stdio: [0, 1, 2] });
-      console.log("Downloaded!");
-      allHappenInHere();
+      console.log("Downloaded! You can run the code again!");
     } else {
-      allHappenInHere();
+      console.log("Stopping code...")
     }
     readline1.close();
   }
 );
+}
+
 
 function allHappenInHere() {
   const cheerio = require("cheerio");
@@ -104,4 +109,5 @@ function allHappenInHere() {
         .catch((error) => console.log(error));
     })
     .catch((error) => console.log(error));
+    
 }
