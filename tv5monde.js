@@ -13,8 +13,8 @@ const levelPath = paths[5]; // a2, b1 ....
 const lessonPath = paths[6]; // file name
 const folderPath = `./${langPath}/${exercicesPath}/${levelPath}`; // to make path, create directory
 const exercicePath = `${langPath}/exercice/`; // exercice path (link to first exercices)
-const videosPath = `${langPath}/videos`;
-try{
+const videosPath = `${langPath}/videos`; // videos path (add video for each first exercice)
+try{ //if error, start readline1 to download packages
  allHappenInHere();
  readline1.close();
 }
@@ -34,62 +34,42 @@ catch(error){
 );
 }
 
-
+// All happen in here...
 function allHappenInHere() {
   const cheerio = require("cheerio");
-  const axios = require("axios");
-  fs.access(folderPath, (error) => {
-    if (error) {
-      fs.mkdir(folderPath, { recursive: true }, (error) => {
-        console.log(error || `Created new folders at ${folderPath}`);
-      });
-    } else {
-      console.log("The folders already exist");
-    }
-  });
-  fs.access(exercicePath, (error) => {
-    if (error) {
-      fs.mkdir(exercicePath, { recursive: true }, (error) => {
-        console.log(error || `Created new folders at ${exercicePath}`);
-      });
-    } else {
-      console.log("The folders already exist");
-    }
-  });
-  fs.access(videosPath, (error) => {
-    if (error) {
-      fs.mkdir(videosPath, { recursive: true }, (error) => {
-        console.log(error || `Created new folders at ${videosPath}`);
-      });
-    }
-  });
+  const axios = require("axios");     // add packages
+// create folders
+  createDir(folderPath);
+  createDir(exercicePath);
+  createDir(videosPath);
+  //get lesson page
   axios.get(link)
     .then((respond) => {
       let html = respond.data;
       const $ = cheerio.load(html);
       const firstExerciceLink = domain + $("a.btn").attr("href");
-      $("a.btn").attr("href", `../../../${exercicePath}${lessonPath}-ex1.html`);
+      $("a.btn").attr("href", `../../../${exercicePath}${lessonPath}-ex1.html`); // get first exercice link from the button.
       const newHtml = $.html();
       fs.writeFile(
         `./${langPath}/${exercicesPath}/${levelPath}/${lessonPath}.html`,
         newHtml,
         (error) => console.log(error || "")
       );
+      // get first exercice page of lesson page
       axios.get(firstExerciceLink)
         .then((respond) => {
           let html = respond.data;
           const $ = cheerio.load(html);
           let data = $("div.video_player_loader").attr("data-broadcast"); // string
-          let ExerciceVideoQualityOptions = JSON.parse(data);
+          let ExerciceVideoQualityOptions = JSON.parse(data); // make array
           let videoLink = ExerciceVideoQualityOptions.find((value) => {
             return value.label === "480p";
           });
-          $("div.group-media").remove
           $("div.consigne-default").after(`
           <video width: "800px" controls>
           <source src="../../${videosPath}/${lessonPath}-ex1.mp4" type="video/mp4"">
           </video>`)
-          
+          //get video from URL
           axios({
             method: "get",
             url: `${videoLink.url}`,
@@ -105,9 +85,34 @@ function allHappenInHere() {
             newHtml,
             (error) => console.log(error || "")
           );
+          //get caption from URL
+          let captionLink = JSON.parse($("div.video_player_loader").attr("data-captions")).files[0].file
+        //  get transcription from URL
+        //  https://apprendre.tv5monde.com/fr/ajax-get-transcription/${data_id}
+          axios.get("https://apprendre.tv5monde.com/fr/ajax-get-transcription/97053")
+           .then(respond =>{
+            let html = respond.data[0].data
+            fs.writeFile(`sub.html`,`
+            <video width: "800px" controls>
+          <source src="../../${videosPath}/${lessonPath}-ex1.mp4" type="video/mp4"">
+          </video>
+            ${html}`,error => console.log(error || ""))
+           })
+           .catch(error => console.log(error || "")) 
         })
         .catch((error) => console.log(error));
     })
     .catch((error) => console.log(error));
     
+}
+function createDir(path){
+  fs.access(path, (error) => {
+    if (error) {
+      fs.mkdir(path, { recursive: true }, (error) => {
+        console.log(error || `Created new folders at ${path}`);
+      });
+    } else {
+      console.log("The folders already exist");
+    }
+  });
 }
