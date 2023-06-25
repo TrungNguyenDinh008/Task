@@ -14,34 +14,36 @@ const lessonPath = paths[6]; // file name
 const folderPath = `./${langPath}/${exercicesPath}/${levelPath}`; // to make path, create directory
 const exercicePath = `${langPath}/exercice/`; // exercice path (link to first exercices)
 const videosPath = `${langPath}/videos`; // videos path (add video for each first exercice)
-try{ //if error, start readline1 to download packages
- allHappenInHere();
- readline1.close();
-}
-catch(error){
+const videoAndTranscriptionPath = `./${langPath}/video-and-transcription/${lessonPath}`;
+try {
+  //if error, start readline1 to download packages
+  allHappenInHere();
+  readline1.close();
+} catch (error) {
   readline1.question(
-  `You need to install these modules: Cheerio, Axios\nDo you want to install these modules?\n[Y/n]\n`,
-  (respond) => {
-    if (respond.toLocaleLowerCase() === "y") {
-      cP.execSync("npm install cheerio", { stdio: [0, 1, 2] });
-      cP.execSync("npm install axios", { stdio: [0, 1, 2] });
-      console.log("Downloaded! You can run the code again!");
-    } else {
-      console.log("Stopping code...")
+    `You need to install these modules: Cheerio, Axios\nDo you want to install these modules?\n[Y/n]\n`,
+    (respond) => {
+      if (respond.toLocaleLowerCase() === "y") {
+        cP.execSync("npm install cheerio", { stdio: [0, 1, 2] });
+        cP.execSync("npm install axios", { stdio: [0, 1, 2] });
+        console.log("Downloaded! You can run the code again!");
+      } else {
+        console.log("Stopping code...");
+      }
+      readline1.close();
     }
-    readline1.close();
-  }
-);
+  );
 }
 
 // All happen in here...
 function allHappenInHere() {
   const cheerio = require("cheerio");
-  const axios = require("axios");     // add packages
-// create folders
+  const axios = require("axios"); // add packages
+  // create folders
   createDir(folderPath);
   createDir(exercicePath);
   createDir(videosPath);
+  createDir(videoAndTranscriptionPath);
   //get lesson page
   axios.get(link)
     .then((respond) => {
@@ -68,7 +70,7 @@ function allHappenInHere() {
           $("div.consigne-default").after(`
           <video width: "800px" controls>
           <source src="../../${videosPath}/${lessonPath}-ex1.mp4" type="video/mp4"">
-          </video>`)
+          </video>`);
           //get video from URL
           axios({
             method: "get",
@@ -79,6 +81,10 @@ function allHappenInHere() {
               fs.createWriteStream(`./${videosPath}/${lessonPath}-ex1.mp4`)
             );
           });
+          let ajaxId = $(
+            "div.field--type-entity-reference > div.field--item"
+          ).attr("data-media-id");
+          $("span.loader_message").replaceWith(`<button><a style:"text-decoration:none;" href='../video-and-transcription/${lessonPath}/${lessonPath}-videoANDsub.html'>Watch the video with transcription</a></button>`)
           const newHtml = $.html();
           fs.writeFile(
             `${exercicePath}${lessonPath}-ex1.html`,
@@ -86,26 +92,69 @@ function allHappenInHere() {
             (error) => console.log(error || "")
           );
           //get caption from URL
-          let captionLink = JSON.parse($("div.video_player_loader").attr("data-captions")).files[0].file
-        //  get transcription from URL
-        //  https://apprendre.tv5monde.com/fr/ajax-get-transcription/${data_id}
-          axios.get("https://apprendre.tv5monde.com/fr/ajax-get-transcription/97053")
-           .then(respond =>{
-            let html = respond.data[0].data
-            fs.writeFile(`sub.html`,`
-            <video width: "800px" controls>
-          <source src="../../${videosPath}/${lessonPath}-ex1.mp4" type="video/mp4"">
+          let captionLink = JSON.parse(
+            $("div.video_player_loader").attr("data-captions")
+          ).files[0].file;
+          //  get transcription from URL
+          axios.get(
+              `https://apprendre.tv5monde.com/fr/ajax-get-transcription/${ajaxId}`
+            )
+            .then((respond) => {
+              let html = respond.data[0].data;
+              fs.writeFile(
+                `${videoAndTranscriptionPath}/${lessonPath}-videoANDsub.html`,
+                `
+            <link ref="style-sheet" href="./${lessonPath}-videoANDsub.css">
+            <video width: "100%" controls>
+          <source src="../../../${videosPath}/${lessonPath}-ex1.mp4" type="video/mp4"">
           </video>
-            ${html}`,error => console.log(error || ""))
-           })
-           .catch(error => console.log(error || "")) 
+            ${html}
+            <script src="../videoANDsub.js"></script>
+            `,
+                (error) => console.log(error || "")
+              );
+              fs.writeFile(
+                `./${langPath}/video-and-transcription/videoANDsub.js`,
+                `
+            const videoHtml = document.querySelector("video");
+const transcription = document.querySelectorAll(".word");
+const numberOfSpan = transcription.length;
+for (let i = 0; i < numberOfSpan; i++) {
+  transcription[i].addEventListener("click", function () {
+    videoHtml.currentTime = transcription[i].attributes["start"].value;
+  });
+}
+
+setInterval(() => {
+  videoHtml.ontimeupdate();
+}, 10);
+
+videoHtml.ontimeupdate = function () {
+  let videoCurrentTime = videoHtml.currentTime;
+  transcription.forEach(function (element) {
+    if (
+      videoCurrentTime >= parseFloat(element.attributes["start"].value) &&
+      videoCurrentTime < parseFloat(element.attributes["end"].value)
+    ) {
+      element.style =
+        "background: linear-gradient(180deg,rgba(255,255,255,0) 25%, #a4dae8 25%);";
+    } else {
+      element.style = "";
+    }
+  });
+};
+
+            `,
+                (error) => console.log(error || "")
+              );
+            })
+            .catch((error) => console.log(error || ""));
         })
         .catch((error) => console.log(error));
     })
     .catch((error) => console.log(error));
-    
 }
-function createDir(path){
+function createDir(path) {
   fs.access(path, (error) => {
     if (error) {
       fs.mkdir(path, { recursive: true }, (error) => {
