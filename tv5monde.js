@@ -11,10 +11,10 @@ const langPath = paths[3]; //fr
 const exercicesPath = paths[4]; //exercises
 const levelPath = paths[5]; // a2, b1 ....
 const lessonPath = paths[6]; // file name
-const folderPath = `./${langPath}/${exercicesPath}/${levelPath}`; // to make path, create directory
-const exercicePath = `${langPath}/exercice/`; // exercice path (link to first exercices)
-const videosPath = `${langPath}/videos`; // videos path (add video for each first exercice)
-const videoAndTranscriptionPath = `./${langPath}/video-and-transcription/${lessonPath}`;
+const folderPath = `./${langPath}/${exercicesPath}/${levelPath}/${lessonPath}`; // to make path, create directory
+const exercicePath = `${langPath}/exercice/${lessonPath}`; // exercice path (link to first exercices)
+const videosPath = `./${folderPath}/videos`; // videos path (add video for each first exercice)
+const videoAndTranscriptionPath = `./${folderPath}/video-and-transcription`;
 try {
   //if error, start readline1 to download packages
   allHappenInHere();
@@ -40,16 +40,16 @@ function allHappenInHere() {
   const cheerio = require("cheerio");
   const axios = require("axios"); // add packages
   // create folders
-  createDir(folderPath);
-  createDir(exercicePath);
-  createDir(videosPath);
-  createDir(videoAndTranscriptionPath);
-  createDir(`${exercicePath}/JS`);
+  createDir(`${exercicePath}/JS`); // fr/exercice/<lessonPath>/JS
+  createDir(videosPath); // fr/exercices/<levelPath>/<lessonPath>/video
+  createDir(videoAndTranscriptionPath); // fr/exercices/<levelPath>/<lessonPath>/video-and-transcription/<lessonPath>
   //get lesson page
   axios
     .get(link)
     .then((respond) => {
       let html = respond.data;
+      let jsonData = JSON.stringify(respond.data)
+      fs.writeFile(`${folderPath}/index.json`,jsonData,error => console.log(error || ""))
       const $ = cheerio.load(html);
       //get first exercice link and ID
       const firstExerciceLink = domain + $("a.btn").attr("href");
@@ -57,10 +57,10 @@ function allHappenInHere() {
         43,
         firstExerciceLink.indexOf("?")
       );
-      $("a.btn").attr("href", `../../../${exercicePath}${lessonPath}-ex1.html`); // change button link to the exercice page.
+      $("a.btn").attr("href", `../../../../${exercicePath}/index-ex1.html`); // change button link to the exercice page.
       const lessonHtml = $.html();
       fs.writeFile(
-        `./${langPath}/${exercicesPath}/${levelPath}/${lessonPath}.html`,
+        `${folderPath}/index.html`,
         lessonHtml,
         (error) => console.log(error || "")
       );
@@ -102,6 +102,8 @@ function allHappenInHere() {
             .get(firstExerciceLink)
             .then((respond) => {
               let html = respond.data;
+              let jsonData = JSON.stringify(respond.data)
+              fs.writeFile(`${exercicePath}/index-ex1.json`,jsonData,error => console.log(error || ""))
               const $ = cheerio.load(html);
               let data = $("div.video_player_loader").attr("data-broadcast"); // string
               let ExerciceVideoQualityOptions = JSON.parse(data); // make array
@@ -110,10 +112,10 @@ function allHappenInHere() {
               });
               $("div.consigne-default").after(`
           <video width: "800px" controls>
-          <source src="../../${videosPath}/${lessonPath}-ex1.mp4" type="video/mp4"">
+          <source src="../../../${videosPath}/${lessonPath}-ex1.mp4" type="video/mp4"">
           </video>`);
               //get video from URL
-              fs.access(`./${videosPath}/${lessonPath}-ex1.mp4`, (error) => {
+              fs.access(`${videosPath}/${lessonPath}-ex1.mp4`, (error) => {
                 if (error) {
                   axios({
                     method: "get",
@@ -136,7 +138,7 @@ function allHappenInHere() {
                 "div.field--type-entity-reference > div.field--item"
               ).attr("data-media-id");
               $("span.loader_message").replaceWith(
-                `<button><a style:"text-decoration:none;" href='../video-and-transcription/${lessonPath}/${lessonPath}-videoANDsub.html'>Watch the video with transcription</a></button>`
+                `<button><a style:"text-decoration:none;" href='../../../../${videoAndTranscriptionPath}/index-videoANDsub.html'>Watch the video with transcription</a></button>`
               );
               $("footer.exercice-footer").replaceWith("");
               $("div.group-right").replaceWith("");
@@ -157,7 +159,7 @@ function allHappenInHere() {
                   $("a").replaceWith("");
                   const exerciceItem = $.html();
                   fs.writeFile(
-                    `./${langPath}/exercice/JS/${lessonPath}-ex1.js`,
+                    `${exercicePath}/JS/main-ex1.js`,
                     ` 
               var exerciceSolution = "${exerciceSolution}
               var exerciceGood = "${exerciceGood}"
@@ -323,11 +325,11 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                     (error) => console.log(error || "")
                   );
                   fs.writeFile(
-                    `${exercicePath}/${lessonPath}-ex1.html`,
+                    `${exercicePath}/index-ex1.html`,
                     `
                 
                 ${exerciceHtml}
-                <script src="./JS/${lessonPath}-ex1.js" defer></script>
+                <script src="./JS/main-ex1.js" defer></script>
                 ${exerciceItem}
                 `,
                     (error) => console.log(error || "")
@@ -345,19 +347,18 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                 .then((respond) => {
                   let html = respond.data[0].data;
                   fs.writeFile(
-                    `${videoAndTranscriptionPath}/${lessonPath}-videoANDsub.html`,
+                    `${videoAndTranscriptionPath}/index-videoANDsub.html`,
                     `
-            <link ref="style-sheet" href="./${lessonPath}-videoANDsub.css">
             <video width: "100%" controls>
-          <source src="../../../${videosPath}/${lessonPath}-ex1.mp4" type="video/mp4"">
+          <source src="../videos/${lessonPath}-ex1.mp4" type="video/mp4"">
           </video>
             ${html}
-            <script src="../videoANDsub.js"></script>
+            <script src="../../../../../videoANDsub.js"></script>
             `,
                     (error) => console.log(error || "")
                   );
                   fs.writeFile(
-                    `./${langPath}/video-and-transcription/videoANDsub.js`,
+                    `./videoANDsub.js`,
                     `
             const videoHtml = document.querySelector("video");
 const transcription = document.querySelectorAll(".word");
