@@ -47,9 +47,7 @@ function allHappenInHere() {
   axios
     .get(link)
     .then((respond) => {
-      let html = respond.data;
-      let jsonData = JSON.stringify(respond.data)
-      fs.writeFile(`${folderPath}/index.json`,jsonData,error => console.log(error || ""))
+      let html = respond.data
       const $ = cheerio.load(html);
       //get first exercice link and ID
       const firstExerciceLink = domain + $("a.btn").attr("href");
@@ -102,8 +100,6 @@ function allHappenInHere() {
             .get(firstExerciceLink)
             .then((respond) => {
               let html = respond.data;
-              let jsonData = JSON.stringify(respond.data)
-              fs.writeFile(`${exercicePath}/index-ex1.json`,jsonData,error => console.log(error || ""))
               const $ = cheerio.load(html);
               let data = $("div.video_player_loader").attr("data-broadcast"); // string
               let ExerciceVideoQualityOptions = JSON.parse(data); // make array
@@ -158,6 +154,38 @@ function allHappenInHere() {
                   $(".group-left").replaceWith("");
                   $("a").replaceWith("");
                   const exerciceItem = $.html();
+                  // console.log($(".field-item > span").length)
+                  const data ={
+                         title: `${lessonPath}`,
+                         language: `${langPath}`,
+                         level: `${levelPath}`,
+                         OriginUrl: link,
+                         videoLink: videoLink.url,
+                         exercice: [
+                            {
+                             name: "firstExercice",
+                             type: "Choose the correct answer block",
+                             option: []
+                            }
+                         ]
+                       }
+                  
+                  
+                    for(let i = 0; i < $(".field-item > span").length;i++ ){
+                    data.exercice[0].option.push({
+                      text: $(".field-item > span")[i].children[0].data,
+                      isCorrect: false
+                    })
+                    }
+                    for(let i = 0; i < $(".field-item > span").length;i++ ){
+                      data.exercice[0].option.push({
+                        text: $(".field-item > u")[i].children[0].data,
+                        isCorrect: true
+                    })
+                    }
+                  console.log(data.exercice[0].option)
+                  fs.writeFile(`${folderPath}/index-data.json`,JSON.stringify(data),error => console.log(error || ""))
+                  // console.log($(".field-item > u").length)
                   fs.writeFile(
                     `${exercicePath}/JS/main-ex1.js`,
                     ` 
@@ -391,6 +419,24 @@ videoHtml.ontimeupdate = function () {
             `,
                     (error) => console.log(error || "")
                   );
+                  // fs.writeFile(`${link.slice(59)}.json`,
+                // JSON.stringify({
+                //   title: link.slice(59),
+                //   OriginUrl: link,
+                //   videoLink: videoLink,
+                //   exercice: [
+                //      {
+                //       type: "Choose the correct answer block",
+                //       option: [
+                //         {
+                //           text: "werfdsaf",
+                //           isCorrect: "true"
+                //         }
+                //       ]
+                //      }
+                //   ]
+                // })
+                // ,error => console.log(error))
                 })
                 .catch((error) => console.log(error));
             })
