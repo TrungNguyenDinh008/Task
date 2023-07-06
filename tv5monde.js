@@ -165,20 +165,20 @@ function allHappenInHere() {
                             {
                              name: "firstExercice",
                              type: "Choose the correct answer block",
-                             option: []
+                             options: []
                             }
                          ]
                        }
                   
                   
                     for(let i = 0; i < $(".field-item > span").length;i++ ){
-                    data.exercice[0].option.push({
+                    data.exercice[0].options.push({
                       text: $(".field-item > span")[i].children[0].data,
                       isCorrect: false
                     })
                     }
                     for(let i = 0; i < $(".field-item > span").length;i++ ){
-                      data.exercice[0].option.push({
+                      data.exercice[0].options.push({
                         text: $(".field-item > u")[i].children[0].data,
                         isCorrect: true
                     })
