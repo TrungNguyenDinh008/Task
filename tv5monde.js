@@ -183,7 +183,6 @@ function allHappenInHere() {
                         isCorrect: true
                     })
                     }
-                  console.log(data.exercice[0].option)
                   fs.writeFile(`${folderPath}/index-data.json`,JSON.stringify(data),error => console.log(error || ""))
                   // console.log($(".field-item > u").length)
                   fs.writeFile(
