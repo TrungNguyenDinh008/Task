@@ -152,12 +152,12 @@ function allHappenInHere() {
                   $(".group-left").replaceWith("");
                   $("a").replaceWith("");
                   const exerciceItem = $.html();
-                  // console.log($(".field-item > span").length)
+
                   const data = {
                     title: `${lessonPath}`,
                     language: `${langPath}`,
                     level: `${levelPath}`,
-                    OriginUrl: link,
+                    originUrl: link,
                     videoLink: videoLink.url,
                     exercice: [
                       {
@@ -180,12 +180,7 @@ function allHappenInHere() {
                       isCorrect: true,
                     });
                   }
-                  fs.writeFile(
-                    `${folderPath}/index-data.json`,
-                    JSON.stringify(data),
-                    (error) => console.log(error || "")
-                  );
-                  // console.log($(".field-item > u").length)
+
                   fs.writeFile(
                     `${exercicePath}/JS/main-ex1.js`,
                     ` 
@@ -362,32 +357,43 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                 `,
                     (error) => console.log(error || "")
                   );
-                });
-              //get caption from URL
-              let captionLink = JSON.parse(
-                $("div.video_player_loader").attr("data-captions")
-              ).files[0].file;
-              //  get transcription from URL
-              axios
-                .get(
-                  `https://apprendre.tv5monde.com/fr/ajax-get-transcription/${ajaxId}`
-                )
-                .then((respond) => {
-                  let html = respond.data[0].data;
-                  fs.writeFile(
-                    `${videoAndTranscriptionPath}/index-videoANDsub.html`,
-                    `
+                  //  get transcription from URL
+                  axios
+                    .get(
+                      `https://apprendre.tv5monde.com/fr/ajax-get-transcription/${ajaxId}`
+                    )
+                    .then((respond) => {
+                      let html = respond.data[0].data;
+                      let $ = cheerio.load(html);
+                      data.videoTranscription = [];
+                      let numberOfSpan = $("span").length;
+                      for (let i = 0; i < numberOfSpan; i++) {
+                        data.videoTranscription.push({
+                          type: $("span")[i].attribs.class,
+                          text: $("span")[i].children[0].data,
+                          startTime: $("span")[i].attribs.start,
+                          endTime: $("span")[i].attribs.end,
+                        });
+                      }
+                      fs.writeFile(
+                        `${folderPath}/index-data.json`,
+                        JSON.stringify(data),
+                        (error) => console.log(error || "")
+                      );
+                      fs.writeFile(
+                        `${videoAndTranscriptionPath}/index-videoANDsub.html`,
+                        `
             <video width: "100%" controls>
           <source src="../videos/${lessonPath}-ex1.mp4" type="video/mp4"">
           </video>
             ${html}
             <script src="../../../../../videoANDsub.js"></script>
             `,
-                    (error) => console.log(error || "")
-                  );
-                  fs.writeFile(
-                    `./videoANDsub.js`,
-                    `
+                        (error) => console.log(error || "")
+                      );
+                      fs.writeFile(
+                        `./videoANDsub.js`,
+                        `
             const videoHtml = document.querySelector("video");
 const transcription = document.querySelectorAll(".word");
 const numberOfSpan = transcription.length;
@@ -417,28 +423,11 @@ videoHtml.ontimeupdate = function () {
 };
 
             `,
-                    (error) => console.log(error || "")
-                  );
-                  // fs.writeFile(`${link.slice(59)}.json`,
-                  // JSON.stringify({
-                  //   title: link.slice(59),
-                  //   OriginUrl: link,
-                  //   videoLink: videoLink,
-                  //   exercice: [
-                  //      {
-                  //       type: "Choose the correct answer block",
-                  //       option: [
-                  //         {
-                  //           text: "werfdsaf",
-                  //           isCorrect: "true"
-                  //         }
-                  //       ]
-                  //      }
-                  //   ]
-                  // })
-                  // ,error => console.log(error))
-                })
-                .catch((error) => console.log(error));
+                        (error) => console.log(error || "")
+                      );
+                    })
+                    .catch((error) => console.log(error));
+                });
             })
             .catch((error) => console.log(error || ""));
         })
