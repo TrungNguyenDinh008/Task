@@ -380,20 +380,48 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                         JSON.stringify(data),
                         (error) => console.log(error || "")
                       );
-                      fs.writeFile(
-                        `${videoAndTranscriptionPath}/index-videoANDsub.html`,
-                        `
-            <video width: "100%" controls>
-          <source src="../videos/${lessonPath}-ex1.mp4" type="video/mp4"">
-          </video>
-          <div>
-          ${data.videoTranscription.map((value) =>{
-              return `<span class="${value.type}" start="${value.startTime}" end="${value.endTime}">${value.text}</span>`
-            }).join("")}
-          </div>
-            <script src="../../../../../videoANDsub.js"></script>
-            `,
-                        (error) => console.log(error || "")
+                      //HARD CODING
+                      //             fs.writeFile(
+                      //               `${videoAndTranscriptionPath}/index-videoANDsub.html`,
+                      //               `
+                      //   <video width: "100%" controls>
+                      // <source src="../videos/${lessonPath}-ex1.mp4" type="video/mp4"">
+                      // </video>
+                      // <div>
+                      // ${data.videoTranscription.map((value) =>{
+                      //     return `<span class="${value.type}" start="${value.startTime}" end="${value.endTime}">${value.text}</span>`
+                      //   }).join("")}
+                      // </div>
+                      //   <script src="../../../../../videoANDsub.js"></script>
+                      //   `,
+                      //               (error) => console.log(error || "")
+                      //             );
+                      //GET DATA FROM JSON TO CREATE VIDEO AND TRANSCRIPTION HTML PAGE
+                      fs.readFile(
+                        `${folderPath}/index-data.json`,
+                        "utf8",
+                        (err, data) => {
+                          if (err) {
+                            console.log(err);
+                          } else {
+                            let inner = JSON.parse(data);
+                            fs.writeFile(
+                              `${videoAndTranscriptionPath}/index-videoANDsub.html`,
+                              `
+              <video width: "100%" controls>
+                    <source src="../videos/${lessonPath}-ex1.mp4" type="video/mp4"">
+                    </video>
+              <div>${inner.videoTranscription
+                .map((value) => {
+                  return `<span class="${value.type}" start="${value.startTime}" end="${value.endTime}">${value.text}</span>`;
+                })
+                .join("")}</div>
+              <script src="../../../../../videoANDsub.js"></script>
+              `,
+                              (err) => console.log(err || "")
+                            );
+                          }
+                        }
                       );
                       fs.writeFile(
                         `./videoANDsub.js`,
