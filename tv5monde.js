@@ -386,7 +386,11 @@ for (let i = 0; i < numberOfInstructImage; i++) {
             <video width: "100%" controls>
           <source src="../videos/${lessonPath}-ex1.mp4" type="video/mp4"">
           </video>
-            ${html}
+          <div>
+          ${data.videoTranscription.map((value) =>{
+              return `<span class="${value.type}" start="${value.startTime}" end="${value.endTime}">${value.text}</span>`
+            }).join("")}
+          </div>
             <script src="../../../../../videoANDsub.js"></script>
             `,
                         (error) => console.log(error || "")
