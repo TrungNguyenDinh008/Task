@@ -371,8 +371,8 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                         data.videoTranscription.push({
                           type: $("span")[i].attribs.class,
                           text: $("span")[i].children[0].data,
-                          startTime: $("span")[i].attribs.start,
-                          endTime: $("span")[i].attribs.end,
+                          startTime: Number($("span")[i].attribs.start),
+                          endTime: Number($("span")[i].attribs.end),
                         });
                       }
                       fs.writeFile(
