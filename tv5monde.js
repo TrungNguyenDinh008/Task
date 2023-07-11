@@ -40,7 +40,7 @@ function allHappenInHere() {
   const cheerio = require("cheerio");
   const axios = require("axios"); // add packages
   // create folders
-  createDir(`${exercicePath}/JS`); // fr/exercice/<lessonPath>/JS
+  createDir(`${exercicePath}/first/JS`) // fr/exercice/<lessonPath>/first/JS
   createDir(videosPath); // fr/exercices/<levelPath>/<lessonPath>/video
   createDir(videoAndTranscriptionPath); // fr/exercices/<levelPath>/<lessonPath>/video-and-transcription/<lessonPath>
   //get lesson page
@@ -55,7 +55,7 @@ function allHappenInHere() {
         43,
         firstExerciceLink.indexOf("?")
       );
-      $("a.btn").attr("href", `../../../../${exercicePath}/index-ex1.html`); // change button link to the exercice page.
+      $("a.btn").attr("href", `../../../../${exercicePath}/first/index.html`); // change button link to the exercice page.
       const lessonHtml = $.html();
       fs.writeFile(`${folderPath}/index.html`, lessonHtml, (error) =>
         console.log(error || "")
@@ -106,7 +106,7 @@ function allHappenInHere() {
               });
               $("div.consigne-default").after(`
           <video width: "800px" controls>
-          <source src="../../../${videosPath}/${lessonPath}-ex1.mp4" type="video/mp4"">
+          <source src="../../../../${videosPath}/${lessonPath}-ex1.mp4" type="video/mp4"">
           </video>`);
               //get video from URL
               fs.access(`${videosPath}/${lessonPath}-ex1.mp4`, (error) => {
@@ -132,7 +132,7 @@ function allHappenInHere() {
                 "div.field--type-entity-reference > div.field--item"
               ).attr("data-media-id");
               $("span.loader_message").replaceWith(
-                `<button><a style:"text-decoration:none;" href='../../../../${videoAndTranscriptionPath}/index-videoANDsub.html'>Watch the video with transcription</a></button>`
+                `<button><a style:"text-decoration:none;" href='../../../../${videoAndTranscriptionPath}/index.html'>Watch the video with transcription</a></button>`
               );
               $("footer.exercice-footer").replaceWith("");
               $("div.group-right").replaceWith("");
@@ -182,7 +182,7 @@ function allHappenInHere() {
                   }
 
                   fs.writeFile(
-                    `${exercicePath}/JS/main-ex1.js`,
+                    `${exercicePath}/first/JS/main.js`,
                     ` 
               var exerciceSolution = "${exerciceSolution}
               var exerciceGood = "${exerciceGood}"
@@ -348,11 +348,11 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                     (error) => console.log(error || "")
                   );
                   fs.writeFile(
-                    `${exercicePath}/index-ex1.html`,
+                    `${exercicePath}/first/index.html`,
                     `
                 
                 ${exerciceHtml}
-                <script src="./JS/main-ex1.js" defer></script>
+                <script src="./JS/main.js" defer></script>
                 ${exerciceItem}
                 `,
                     (error) => console.log(error || "")
@@ -369,60 +369,44 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                       let numberOfSpan = $("span").length;
                       for (let i = 0; i < numberOfSpan; i++) {
                         data.videoTranscription.push({
-                          type: $("span")[i].attribs.class,
-                          text: $("span")[i].children[0].data,
-                          startTime: Number($("span")[i].attribs.start),
-                          endTime: Number($("span")[i].attribs.end),
+                          type: $(".word")[i].attribs.class,
+                          tagName: $(".word")[i].name,
+                          text: $(".word")[i].children[0].data,
+                          startTime: Number($(".word")[i].attribs.start),
+                          endTime: Number($(".word")[i].attribs.end),
                         });
                       }
+                      data.transcriptionHtmlData = html
                       fs.writeFile(
-                        `${folderPath}/index-data.json`,
+                        `${folderPath}/data.json`,
                         JSON.stringify(data),
                         (error) => console.log(error || "")
                       );
-                      //HARD CODING
-                      //             fs.writeFile(
-                      //               `${videoAndTranscriptionPath}/index-videoANDsub.html`,
-                      //               `
-                      //   <video width: "100%" controls>
-                      // <source src="../videos/${lessonPath}-ex1.mp4" type="video/mp4"">
-                      // </video>
-                      // <div>
-                      // ${data.videoTranscription.map((value) =>{
-                      //     return `<span class="${value.type}" start="${value.startTime}" end="${value.endTime}">${value.text}</span>`
-                      //   }).join("")}
-                      // </div>
-                      //   <script src="../../../../../videoANDsub.js"></script>
-                      //   `,
-                      //               (error) => console.log(error || "")
-                      //             );
-                      //GET DATA FROM JSON TO CREATE VIDEO AND TRANSCRIPTION HTML PAGE
-                      fs.readFile(
-                        `${folderPath}/index-data.json`,
-                        "utf8",
-                        (err, data) => {
-                          if (err) {
-                            console.log(err);
-                          } else {
-                            let inner = JSON.parse(data);
-                            fs.writeFile(
-                              `${videoAndTranscriptionPath}/index-videoANDsub.html`,
-                              `
-              <video width: "100%" controls>
-                    <source src="../videos/${lessonPath}-ex1.mp4" type="video/mp4"">
-                    </video>
-              <div>${inner.videoTranscription
-                .map((value) => {
-                  return `<span class="${value.type}" start="${value.startTime}" end="${value.endTime}">${value.text}</span>`;
-                })
-                .join("")}</div>
-              <script src="../../../../../videoANDsub.js"></script>
-              `,
-                              (err) => console.log(err || "")
-                            );
-                          }
-                        }
+                      fs.writeFile(
+                        `${videoAndTranscriptionPath}/index.html`,
+                        `
+            <video width: "100%" controls>
+          <source src="../videos/${lessonPath}-ex1.mp4" type="video/mp4"">
+          </video>
+          <div id="transcriptionContent">
+
+          </div>
+            <script src="./main.js"></script>
+            <script src="../../../../../videoANDsub.js" defer></script>
+            `,
+                        (error) => console.log(error || "")
                       );
+                      fs.readFile(`${folderPath}/data.json`,"utf-8",(err, data) =>{
+                        if (err){
+                          console.log(err)
+                        } else {
+                          let dataObj = JSON.parse(data)
+                          fs.writeFile(`${videoAndTranscriptionPath}/main.js`,`
+                          let transcriptionData = \`${dataObj.transcriptionHtmlData}\`
+                          document.querySelector("#transcriptionContent").innerHTML = transcriptionData
+                          `,error => console.log(error || ""))
+                        }
+                      })
                       fs.writeFile(
                         `./videoANDsub.js`,
                         `
