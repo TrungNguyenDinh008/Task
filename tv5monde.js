@@ -40,7 +40,7 @@ function allHappenInHere() {
   const cheerio = require("cheerio");
   const axios = require("axios"); // add packages
   // create folders
-  createDir(`${exercicePath}/first/JS`) // fr/exercice/<lessonPath>/first/JS
+  createDir(`${exercicePath}/first/JS`); // fr/exercice/<lessonPath>/first/JS
   createDir(videosPath); // fr/exercices/<levelPath>/<lessonPath>/video
   createDir(videoAndTranscriptionPath); // fr/exercices/<levelPath>/<lessonPath>/video-and-transcription/<lessonPath>
   //get lesson page
@@ -366,17 +366,64 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                       let html = respond.data[0].data;
                       let $ = cheerio.load(html);
                       data.videoTranscription = [];
-                      let numberOfSpan = $("span").length;
-                      for (let i = 0; i < numberOfSpan; i++) {
-                        data.videoTranscription.push({
-                          type: $(".word")[i].attribs.class,
-                          tagName: $(".word")[i].name,
-                          text: $(".word")[i].children[0].data,
-                          startTime: Number($(".word")[i].attribs.start),
-                          endTime: Number($(".word")[i].attribs.end),
+                      $("show")
+                        .children()
+                        .map((i, item) => {
+                          let e = i + 1;
+                          if (item.name === "div") {
+                            let sentence = {
+                              type: "sentence",
+                              tagName: item.name,
+                              words: [],
+                              numberOfWord: $(
+                                `show > :nth-child(${e})`
+                              ).children().length,
+                            };
+                            data.videoTranscription.push(sentence);
+                          } else if (
+                            item.name === "strong" ||
+                            item.name === "em" ||
+                            item.name === "span"
+                          ) {
+                            let word = {
+                              type: "word",
+                              tagName: item.name,
+                              text: item.children[0].data,
+                            };
+                            data.videoTranscription.push(word);
+                          } else {
+                            console.log("error...");
+                          }
                         });
+                      var accumulator = [];
+                      $("show > *")
+                        .children()
+                        .map((i, item) => {
+                          if (item.name == "span") {
+                            accumulator.push({
+                              type: "word",
+                              tagName: item.name,
+                              text: item.children[0].data,
+                              start: item.attribs.start,
+                              end: item.attribs.end,
+                            });
+                          } else {
+                            accumulator.push({
+                              type: "word",
+                              tagName: item.name,
+                              text: item.children[0].data,
+                            });
+                          }
+                        });
+                      for (var sentence of data.videoTranscription) {
+                        if (sentence.numberOfWord) {
+                          sentence.words = accumulator.splice(
+                            0,
+                            sentence.numberOfWord
+                          );
+                        } else {
+                        }
                       }
-                      data.transcriptionHtmlData = html
                       fs.writeFile(
                         `${folderPath}/data.json`,
                         JSON.stringify(data),
@@ -396,47 +443,87 @@ for (let i = 0; i < numberOfInstructImage; i++) {
             `,
                         (error) => console.log(error || "")
                       );
-                      fs.readFile(`${folderPath}/data.json`,"utf-8",(err, data) =>{
-                        if (err){
-                          console.log(err)
-                        } else {
-                          let dataObj = JSON.parse(data)
-                          fs.writeFile(`${videoAndTranscriptionPath}/main.js`,`
-                          let transcriptionData = \`${dataObj.transcriptionHtmlData}\`
-                          document.querySelector("#transcriptionContent").innerHTML = transcriptionData
-                          `,error => console.log(error || ""))
+                      fs.readFile(
+                        `${folderPath}/data.json`,
+                        "utf-8",
+                        (err, data) => {
+                          if (err) {
+                            console.log(err);
+                          } else {
+                            let newData = JSON.parse(data);
+                            let transcriptionData = newData.videoTranscription;
+                            transcriptionData =
+                              JSON.stringify(transcriptionData);
+                            fs.writeFile(
+                              `${videoAndTranscriptionPath}/main.js`,
+                              `
+                          let data = ${transcriptionData}
+                          let contentContainer = document.getElementById("transcriptionContent");
+                    data.map((value) => {
+                        let htmlElm = document.createElement(value.tagName);
+                htmlElm.classList.add(value.type);
+                       if (value.type === "sentence") {
+    value.words.map((value)=>{
+        let childElm = document.createElement(value.tagName);
+        childElm.classList.add(value.type);
+        if(value.tagName === "span"){
+          childElm.setAttribute("start",value.start);
+          childElm.setAttribute("end", value.end);
+        } else {
+          // do nothing
+        }
+        childElm.innerText = value.text
+        htmlElm.appendChild(childElm)
+    })
+  } else {
+    if (value.tagName === "strong" || value.tagName === "em") {
+    } else {
+      htmlElm.setAttribute("start", value.startTime);
+      htmlElm.setAttribute("end", value.endTime);
+    }
+    htmlElm.innerText = value.text;
+  }
+  contentContainer.appendChild(htmlElm);
+});
+                        `,
+                              (err) => console.log(err || "")
+                            );
+                          }
                         }
-                      })
+                      );
                       fs.writeFile(
                         `./videoANDsub.js`,
                         `
-            const videoHtml = document.querySelector("video");
-const transcription = document.querySelectorAll(".word");
-const numberOfSpan = transcription.length;
-for (let i = 0; i < numberOfSpan; i++) {
-  transcription[i].addEventListener("click", function () {
-    videoHtml.currentTime = transcription[i].attributes["start"].value;
-  });
-}
 
-setInterval(() => {
-  videoHtml.ontimeupdate();
-}, 10);
-
-videoHtml.ontimeupdate = function () {
-  let videoCurrentTime = videoHtml.currentTime;
-  transcription.forEach(function (element) {
-    if (
-      videoCurrentTime >= parseFloat(element.attributes["start"].value) &&
-      videoCurrentTime < parseFloat(element.attributes["end"].value)
-    ) {
-      element.style =
-        "background: linear-gradient(180deg,rgba(255,255,255,0) 25%, #a4dae8 25%);";
-    } else {
-      element.style = "";
-    }
-  });
-};
+                        const videoHtml = document.querySelector("video");
+                        const transcription = document.querySelectorAll(".sentence > span.word");
+                        const numberOfSpan = transcription.length;
+                        for (let i = 0; i < numberOfSpan; i++) {
+                          transcription[i].addEventListener("click", function () {
+                            videoHtml.currentTime = transcription[i].attributes["start"].value;
+                          });
+                        }
+                        
+                        setInterval(() => {
+                          videoHtml.ontimeupdate();
+                        }, 10);
+                        
+                        videoHtml.ontimeupdate = function () {
+                          let videoCurrentTime = videoHtml.currentTime;
+                          transcription.forEach(function (element) {
+                            if (
+                              videoCurrentTime >= parseFloat(element.attributes["start"].value) &&
+                              videoCurrentTime < parseFloat(element.attributes["end"].value)
+                            ) {
+                              element.style =
+                                "background: linear-gradient(180deg,rgba(255,255,255,0) 25%, #a4dae8 25%);";
+                            } else {
+                              element.style = "";
+                            }
+                          });
+                        };
+                        
+                                    
 
             `,
                         (error) => console.log(error || "")
@@ -447,7 +534,268 @@ videoHtml.ontimeupdate = function () {
             })
             .catch((error) => console.log(error || ""));
         })
-        .catch((error) => console.log(error));
+        .catch((error) => {
+          // get first exercice page of lesson page
+          axios
+            .get(firstExerciceLink)
+            .then((respond) => {
+              let html = respond.data;
+              const $ = cheerio.load(html);
+              let data = $("div.video_player_loader").attr("data-broadcast"); // string
+              let ExerciceVideoQualityOptions = JSON.parse(data); // make array
+              let videoLink = ExerciceVideoQualityOptions.find((value) => {
+                return value.label === "480p";
+              });
+              $("div.consigne-default").after(`
+          <video width: "800px" controls>
+          <source src="../../../../${videosPath}/${lessonPath}-ex1.mp4" type="video/mp4"">
+          </video>`);
+              //get video from URL
+              fs.access(`${videosPath}/${lessonPath}-ex1.mp4`, (error) => {
+                if (error) {
+                  axios({
+                    method: "get",
+                    url: `${videoLink.url}`,
+                    responseType: "stream",
+                  })
+                    .then(function (response) {
+                      response.data.pipe(
+                        fs.createWriteStream(
+                          `./${videosPath}/${lessonPath}-ex1.mp4`
+                        )
+                      );
+                    })
+                    .catch((error) => console.log(error || ""));
+                } else {
+                  console.log("Video downloaded already");
+                }
+              });
+              let ajaxId = $(
+                "div.field--type-entity-reference > div.field--item"
+              ).attr("data-media-id");
+              $("span.loader_message").replaceWith(
+                `<button><a style:"text-decoration:none;" href='../../../../${videoAndTranscriptionPath}/index.html'>Watch the video with transcription</a></button>`
+              );
+              $("footer.exercice-footer").replaceWith("");
+              $("div.group-right").replaceWith("");
+              const exerciceHtml = $.html();
+              //get exrcice items
+              axios
+                .get(`https://apprendre.tv5monde.com/fr/exercice/${exerciceId}`)
+                .then((respond) => {
+                  let html = respond.data
+                    .replaceAll("[–]", "<b>–</b>")
+                    .replaceAll("{", "<span>")
+                    .replaceAll("}", "</span>")
+                    .replaceAll("<script", "<!--<script")
+                    .replaceAll("</script>", "-->")
+                    .replaceAll("[.]", "");
+                  let $ = cheerio.load(html);
+                  $(".group-left").replaceWith("");
+                  $("a").replaceWith("");
+                  const exerciceItem = $.html();
+
+                  const data = {
+                    title: `${lessonPath}`,
+                    language: `${langPath}`,
+                    level: `${levelPath}`,
+                    originUrl: link,
+                    videoLink: videoLink.url,
+                    exercice: [
+                      {
+                        name: "firstExercice",
+                        type: "Choose the correct answer block",
+                        options: [],
+                      },
+                    ],
+                  };
+
+                  fs.writeFile(
+                    `${exercicePath}/first/index.html`,
+                    `
+                ${exerciceHtml}
+                <script src="./JS/main.js" defer></script>
+                ${exerciceItem}
+                `,
+                    (error) => console.log(error || "")
+                  );
+                  //  get transcription from URL
+                  axios
+                    .get(
+                      `https://apprendre.tv5monde.com/fr/ajax-get-transcription/${ajaxId}`
+                    )
+                    .then((respond) => {
+                      let html = respond.data[0].data;
+                      let $ = cheerio.load(html);
+                      data.videoTranscription = [];
+                      $("show")
+                        .children()
+                        .map((i, item) => {
+                          let e = i + 1;
+                          if (item.name === "div") {
+                            let sentence = {
+                              type: "sentence",
+                              tagName: item.name,
+                              words: [],
+                              numberOfWord: $(
+                                `show > :nth-child(${e})`
+                              ).children().length,
+                            };
+                            data.videoTranscription.push(sentence);
+                          } else if (
+                            item.name === "strong" ||
+                            item.name === "em" ||
+                            item.name === "span"
+                          ) {
+                            let word = {
+                              type: "word",
+                              tagName: item.name,
+                              text: item.children[0].data,
+                            };
+                            data.videoTranscription.push(word);
+                          } else {
+                            console.log("error...");
+                          }
+                        });
+                      var accumulator = [];
+                      $("show > *")
+                        .children()
+                        .map((i, item) => {
+                          if (item.name == "span") {
+                            accumulator.push({
+                              type: "word",
+                              tagName: item.name,
+                              text: item.children[0].data,
+                              start: item.attribs.start,
+                              end: item.attribs.end,
+                            });
+                          } else {
+                            accumulator.push({
+                              type: "word",
+                              tagName: item.name,
+                              text: item.children[0].data,
+                            });
+                          }
+                        });
+                      for (var sentence of data.videoTranscription) {
+                        if (sentence.numberOfWord) {
+                          sentence.words = accumulator.splice(
+                            0,
+                            sentence.numberOfWord
+                          );
+                        } else {
+                        }
+                      }
+                      fs.writeFile(
+                        `${folderPath}/data.json`,
+                        JSON.stringify(data),
+                        (error) => console.log(error || "")
+                      );
+                      fs.writeFile(
+                        `${videoAndTranscriptionPath}/index.html`,
+                        `
+            <video width: "100%" controls>
+          <source src="../videos/${lessonPath}-ex1.mp4" type="video/mp4"">
+          </video>
+          <div id="transcriptionContent">
+
+          </div>
+            <script src="./main.js"></script>
+            <script src="../../../../../videoANDsub.js" defer></script>
+            `,
+                        (error) => console.log(error || "")
+                      );
+                      fs.readFile(
+                        `${folderPath}/data.json`,
+                        "utf-8",
+                        (err, data) => {
+                          if (err) {
+                            console.log(err);
+                          } else {
+                            let newData = JSON.parse(data);
+                            let transcriptionData = newData.videoTranscription;
+                            transcriptionData =
+                              JSON.stringify(transcriptionData);
+                            fs.writeFile(
+                              `${videoAndTranscriptionPath}/main.js`,
+                              `
+                          let data = ${transcriptionData}
+                          let contentContainer = document.getElementById("transcriptionContent");
+                    data.map((value) => {
+                        let htmlElm = document.createElement(value.tagName);
+                htmlElm.classList.add(value.type);
+                       if (value.type === "sentence") {
+    value.words.map((value)=>{
+        let childElm = document.createElement(value.tagName);
+        childElm.classList.add(value.type);
+        if(value.tagName === "span"){
+          childElm.setAttribute("start",value.start);
+          childElm.setAttribute("end", value.end);
+        } else {
+          // do nothing
+        }
+        childElm.innerText = value.text
+        htmlElm.appendChild(childElm)
+    })
+  } else {
+    if (value.tagName === "strong" || value.tagName === "em") {
+    } else {
+      htmlElm.setAttribute("start", value.startTime);
+      htmlElm.setAttribute("end", value.endTime);
+    }
+    htmlElm.innerText = value.text;
+  }
+  contentContainer.appendChild(htmlElm);
+});
+                        `,
+                              (err) => console.log(err || "")
+                            );
+                          }
+                        }
+                      );
+                      fs.writeFile(
+                        `./videoANDsub.js`,
+                        `
+
+                        const videoHtml = document.querySelector("video");
+                        const transcription = document.querySelectorAll(".sentence > span.word");
+                        const numberOfSpan = transcription.length;
+                        for (let i = 0; i < numberOfSpan; i++) {
+                          transcription[i].addEventListener("click", function () {
+                            videoHtml.currentTime = transcription[i].attributes["start"].value;
+                          });
+                        }
+                        
+                        setInterval(() => {
+                          videoHtml.ontimeupdate();
+                        }, 10);
+                        
+                        videoHtml.ontimeupdate = function () {
+                          let videoCurrentTime = videoHtml.currentTime;
+                          transcription.forEach(function (element) {
+                            if (
+                              videoCurrentTime >= parseFloat(element.attributes["start"].value) &&
+                              videoCurrentTime < parseFloat(element.attributes["end"].value)
+                            ) {
+                              element.style =
+                                "background: linear-gradient(180deg,rgba(255,255,255,0) 25%, #a4dae8 25%);";
+                            } else {
+                              element.style = "";
+                            }
+                          });
+                        };
+                        
+                                    
+
+            `,
+                        (error) => console.log(error || "")
+                      );
+                    })
+                    .catch((error) => console.log(error));
+                });
+            })
+            .catch((error) => console.log(error || ""));
+        });
     })
     .catch((error) => console.log(error));
 }
