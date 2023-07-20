@@ -457,34 +457,46 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                             fs.writeFile(
                               `${videoAndTranscriptionPath}/main.js`,
                               `
-                          let data = ${transcriptionData}
-                          let contentContainer = document.getElementById("transcriptionContent");
-                    data.map((value) => {
-                        let htmlElm = document.createElement(value.tagName);
-                htmlElm.classList.add(value.type);
-                       if (value.type === "sentence") {
-    value.words.map((value)=>{
-        let childElm = document.createElement(value.tagName);
-        childElm.classList.add(value.type);
-        if(value.tagName === "span"){
-          childElm.setAttribute("start",value.start);
-          childElm.setAttribute("end", value.end);
-        } else {
-          // do nothing
-        }
-        childElm.innerText = value.text
-        htmlElm.appendChild(childElm)
-    })
-  } else {
-    if (value.tagName === "strong" || value.tagName === "em") {
-    } else {
-      htmlElm.setAttribute("start", value.startTime);
-      htmlElm.setAttribute("end", value.endTime);
-    }
-    htmlElm.innerText = value.text;
-  }
-  contentContainer.appendChild(htmlElm);
-});
+                              function Func() {
+                                fetch(
+                                  "http://127.0.0.1:5500/${folderPath}/data.json"
+                                )
+                                  .then((res) => {
+                                    return res.json();
+                                  })
+                                  .then((resData) => {
+                                    let data = resData.videoTranscription
+                                    let contentContainer = document.getElementById("transcriptionContent");
+                                    data.map((value) => {
+                                      let htmlElm = document.createElement(value.tagName);
+                                      htmlElm.classList.add(value.type);
+                                      if (value.type === "sentence") {
+                                        value.words.map((value) => {
+                                          let childElm = document.createElement(value.tagName);
+                                          childElm.classList.add(value.type);
+                                          if (value.tagName === "span") {
+                                            childElm.setAttribute("start", value.start);
+                                            childElm.setAttribute("end", value.end);
+                                          } else {
+                                            // do nothing
+                                          }
+                                          childElm.innerText = value.text;
+                                          htmlElm.appendChild(childElm);
+                                        });
+                                      } else {
+                                        if (value.tagName === "strong" || value.tagName === "em") {
+                                        } else {
+                                          htmlElm.setAttribute("start", value.startTime);
+                                          htmlElm.setAttribute("end", value.endTime);
+                                        }
+                                        htmlElm.innerText = value.text;
+                                      }
+                                      contentContainer.appendChild(htmlElm);
+                                    });
+                                  });
+                              }
+                              
+                              Func();
                         `,
                               (err) => console.log(err || "")
                             );
@@ -494,37 +506,37 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                       fs.writeFile(
                         `./videoANDsub.js`,
                         `
-
-                        const videoHtml = document.querySelector("video");
-                        const transcription = document.querySelectorAll(".sentence > span.word");
-                        const numberOfSpan = transcription.length;
-                        for (let i = 0; i < numberOfSpan; i++) {
-                          transcription[i].addEventListener("click", function () {
-                            videoHtml.currentTime = transcription[i].attributes["start"].value;
-                          });
-                        }
+                        setTimeout(() => {
+                          const videoHtml = document.querySelector("video");
+                          console.log(document.querySelectorAll(".sentence > span.word"));
+                          const transcription = document.querySelectorAll(".sentence > span.word");
+                          const numberOfSpan = transcription.length;
+                          for (let i = 0; i < numberOfSpan; i++) {
+                            transcription[i].addEventListener("click", function () {
+                              videoHtml.currentTime = transcription[i].attributes["start"].value;
+                            });
+                          }
                         
-                        setInterval(() => {
-                          videoHtml.ontimeupdate();
-                        }, 10);
+                          setInterval(() => {
+                            videoHtml.ontimeupdate();
+                          }, 10);
                         
-                        videoHtml.ontimeupdate = function () {
-                          let videoCurrentTime = videoHtml.currentTime;
-                          transcription.forEach(function (element) {
-                            if (
-                              videoCurrentTime >= parseFloat(element.attributes["start"].value) &&
-                              videoCurrentTime < parseFloat(element.attributes["end"].value)
-                            ) {
-                              element.style =
-                                "background: linear-gradient(180deg,rgba(255,255,255,0) 25%, #a4dae8 25%);";
-                            } else {
-                              element.style = "";
-                            }
-                          });
-                        };
+                          videoHtml.ontimeupdate = function () {
+                            let videoCurrentTime = videoHtml.currentTime;
+                            transcription.forEach(function (element) {
+                              if (
+                                videoCurrentTime >= parseFloat(element.attributes["start"].value) &&
+                                videoCurrentTime < parseFloat(element.attributes["end"].value)
+                              ) {
+                                element.style =
+                                  "background: linear-gradient(180deg,rgba(255,255,255,0) 25%, #a4dae8 25%);";
+                              } else {
+                                element.style = "";
+                              }
+                            });
+                          };
+                        }, 2000);
                         
-                                    
-
             `,
                         (error) => console.log(error || "")
                       );
@@ -534,6 +546,7 @@ for (let i = 0; i < numberOfInstructImage; i++) {
             })
             .catch((error) => console.log(error || ""));
         })
+        //If it doesn't have the solution page, run the code below:
         .catch((error) => {
           // get first exercice page of lesson page
           axios
@@ -719,34 +732,46 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                             fs.writeFile(
                               `${videoAndTranscriptionPath}/main.js`,
                               `
-                          let data = ${transcriptionData}
-                          let contentContainer = document.getElementById("transcriptionContent");
-                    data.map((value) => {
-                        let htmlElm = document.createElement(value.tagName);
-                htmlElm.classList.add(value.type);
-                       if (value.type === "sentence") {
-    value.words.map((value)=>{
-        let childElm = document.createElement(value.tagName);
-        childElm.classList.add(value.type);
-        if(value.tagName === "span"){
-          childElm.setAttribute("start",value.start);
-          childElm.setAttribute("end", value.end);
-        } else {
-          // do nothing
-        }
-        childElm.innerText = value.text
-        htmlElm.appendChild(childElm)
-    })
-  } else {
-    if (value.tagName === "strong" || value.tagName === "em") {
-    } else {
-      htmlElm.setAttribute("start", value.startTime);
-      htmlElm.setAttribute("end", value.endTime);
-    }
-    htmlElm.innerText = value.text;
-  }
-  contentContainer.appendChild(htmlElm);
-});
+                              function Func() {
+                                fetch(
+                                  "http://127.0.0.1:5500/${folderPath}/data.json"
+                                )
+                                  .then((res) => {
+                                    return res.json();
+                                  })
+                                  .then((resData) => {
+                                    let data = resData.videoTranscription
+                                    let contentContainer = document.getElementById("transcriptionContent");
+                                    data.map((value) => {
+                                      let htmlElm = document.createElement(value.tagName);
+                                      htmlElm.classList.add(value.type);
+                                      if (value.type === "sentence") {
+                                        value.words.map((value) => {
+                                          let childElm = document.createElement(value.tagName);
+                                          childElm.classList.add(value.type);
+                                          if (value.tagName === "span") {
+                                            childElm.setAttribute("start", value.start);
+                                            childElm.setAttribute("end", value.end);
+                                          } else {
+                                            // do nothing
+                                          }
+                                          childElm.innerText = value.text;
+                                          htmlElm.appendChild(childElm);
+                                        });
+                                      } else {
+                                        if (value.tagName === "strong" || value.tagName === "em") {
+                                        } else {
+                                          htmlElm.setAttribute("start", value.startTime);
+                                          htmlElm.setAttribute("end", value.endTime);
+                                        }
+                                        htmlElm.innerText = value.text;
+                                      }
+                                      contentContainer.appendChild(htmlElm);
+                                    });
+                                  });
+                              }
+                              
+                              Func();
                         `,
                               (err) => console.log(err || "")
                             );
@@ -756,38 +781,37 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                       fs.writeFile(
                         `./videoANDsub.js`,
                         `
-
-                        const videoHtml = document.querySelector("video");
-                        const transcription = document.querySelectorAll(".sentence > span.word");
-                        const numberOfSpan = transcription.length;
-                        for (let i = 0; i < numberOfSpan; i++) {
-                          transcription[i].addEventListener("click", function () {
-                            videoHtml.currentTime = transcription[i].attributes["start"].value;
-                          });
-                        }
+                        setTimeout(() => {
+                          const videoHtml = document.querySelector("video");
+                          console.log(document.querySelectorAll(".sentence > span.word"));
+                          const transcription = document.querySelectorAll(".sentence > span.word");
+                          const numberOfSpan = transcription.length;
+                          for (let i = 0; i < numberOfSpan; i++) {
+                            transcription[i].addEventListener("click", function () {
+                              videoHtml.currentTime = transcription[i].attributes["start"].value;
+                            });
+                          }
                         
-                        setInterval(() => {
-                          videoHtml.ontimeupdate();
-                        }, 10);
+                          setInterval(() => {
+                            videoHtml.ontimeupdate();
+                          }, 10);
                         
-                        videoHtml.ontimeupdate = function () {
-                          let videoCurrentTime = videoHtml.currentTime;
-                          transcription.forEach(function (element) {
-                            if (
-                              videoCurrentTime >= parseFloat(element.attributes["start"].value) &&
-                              videoCurrentTime < parseFloat(element.attributes["end"].value)
-                            ) {
-                              element.style =
-                                "background: linear-gradient(180deg,rgba(255,255,255,0) 25%, #a4dae8 25%);";
-                            } else {
-                              element.style = "";
-                            }
-                          });
-                        };
-                        
-                                    
-
-            `,
+                          videoHtml.ontimeupdate = function () {
+                            let videoCurrentTime = videoHtml.currentTime;
+                            transcription.forEach(function (element) {
+                              if (
+                                videoCurrentTime >= parseFloat(element.attributes["start"].value) &&
+                                videoCurrentTime < parseFloat(element.attributes["end"].value)
+                              ) {
+                                element.style =
+                                  "background: linear-gradient(180deg,rgba(255,255,255,0) 25%, #a4dae8 25%);";
+                              } else {
+                                element.style = "";
+                              }
+                            });
+                          };
+                        }, 2000);
+                                    `,
                         (error) => console.log(error || "")
                       );
                     })
