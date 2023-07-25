@@ -459,7 +459,7 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                               `
                               function Func() {
                                 fetch(
-                                  "http://127.0.0.1:5500/${folderPath}/data.json"
+                                  "../data.json"
                                 )
                                   .then((res) => {
                                     return res.json();
@@ -508,7 +508,6 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                         `
                         setTimeout(() => {
                           const videoHtml = document.querySelector("video");
-                          console.log(document.querySelectorAll(".sentence > span.word"));
                           const transcription = document.querySelectorAll(".sentence > span.word");
                           const numberOfSpan = transcription.length;
                           for (let i = 0; i < numberOfSpan; i++) {
@@ -734,7 +733,7 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                               `
                               function Func() {
                                 fetch(
-                                  "http://127.0.0.1:5500/${folderPath}/data.json"
+                                  "../data.json"
                                 )
                                   .then((res) => {
                                     return res.json();
@@ -783,7 +782,6 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                         `
                         setTimeout(() => {
                           const videoHtml = document.querySelector("video");
-                          console.log(document.querySelectorAll(".sentence > span.word"));
                           const transcription = document.querySelectorAll(".sentence > span.word");
                           const numberOfSpan = transcription.length;
                           for (let i = 0; i < numberOfSpan; i++) {
