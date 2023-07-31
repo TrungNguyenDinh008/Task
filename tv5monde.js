@@ -56,6 +56,8 @@ function allHappenInHere() {
         firstExerciceLink.indexOf("?")
       );
       $("a.btn").attr("href", `../../../../${exercicePath}/first/index.html`); // change button link to the exercice page.
+      $("div.wrap-verticale-lg").prepend(`<button style="font-size: 40px; display:inline-block"><a href="../../../../${exercicePath}/first/index.html">Go to the first exercise page</a></button>`)
+      $("div.wrap-verticale-lg").append(`<button style="font-size: 40px; display:inline-block"><a href="../../../../${videoAndTranscriptionPath}/index.html">Go to the video & transcription page</a></button>`)
       const lessonHtml = $.html();
       fs.writeFile(`${folderPath}/index.html`, lessonHtml, (error) =>
         console.log(error || "")
