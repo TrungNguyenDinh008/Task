@@ -1,5 +1,6 @@
 const fs = require("fs");
 const cP = require("child_process");
+const { log } = require("console");
 const readline1 = require("readline").createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -49,15 +50,195 @@ function allHappenInHere() {
     .then((respond) => {
       let html = respond.data;
       const $ = cheerio.load(html);
+      //get the lesson list
+      let lessonListData = [];
+      $("ul.list-unstyled.wrapper-list-exo")
+        .children()
+        .each((i, item) => {
+          lessonListData.push(
+            `"${item.children[0].children[1].children[0].children[0].data}"`
+          );
+        });
+      // get the publish day
+      let p = $(
+        ".field--name-dynamic-token-fieldnode-published-changed-dates"
+      ).text();
       //get first exercice link and ID
       const firstExerciceLink = domain + $("a.btn").attr("href");
       const exerciceId = firstExerciceLink.slice(
         43,
         firstExerciceLink.indexOf("?")
       );
-      $("a.btn").attr("href", `../../../../${exercicePath}/first/index.html`); // change button link to the exercice page.
-      $("div.wrap-verticale-lg").prepend(`<button style="font-size: 40px; display:inline-block"><a href="../../../../${exercicePath}/first/index.html">Go to the first exercise page</a></button>`)
-      $("div.wrap-verticale-lg").append(`<button style="font-size: 40px; display:inline-block"><a href="../../../../${videoAndTranscriptionPath}/index.html">Go to the video & transcription page</a></button>`)
+      let lessonH1 = lessonPath.replaceAll("-", " ");
+      let levelH1 = levelPath.replaceAll("-", " ");
+      let lessonImg =
+        "https://www.tv5monde.com/cms/template/arche/images/tv5monde_og.jpg";
+      $("html").empty().html("<head></head><body></body>").html();
+      $("body").append(`
+      <style>
+      body{
+        background-color: #F2F9FE;
+        color: #21254F;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 1.2em;
+      }
+      .header{
+        text-align: left
+      }
+      .gridDiv{
+        text-align: center;
+        display: grid;
+        grid-template-columns: 70% 30%;
+        grid-template-rows: auto;
+        width: 100%
+      }
+      .rightDiv{
+        text-align: left;
+        border-left-style: solid;
+      }
+      .button{
+        white-space: nowrap;
+        border: none;
+        padding: 12px 55px;
+        border-radius: 8px;
+        color: rgb(255, 255, 255);
+        font-weight: bold;
+        background: linear-gradient(224.47deg, rgb(0, 186, 216) 0%, rgb(1, 139, 241) 99.09%);
+        cursor: pointer;
+      }
+      .button > a{
+        color: white;
+        text-decoration: none;
+      }
+      .bigButton{
+        white-space: nowrap;
+        border: none;
+        padding: 20px 60px;
+        border-radius: 8px;
+        color: rgb(255, 255, 255);
+        font-weight: bold;
+        background: linear-gradient(224.47deg, rgb(0, 186, 216) 0%, rgb(1, 139, 241) 99.09%);
+        position: relative;
+        cursor: pointer;
+      }
+      .bigButton > a{
+        color: white;
+        text-decoration: none;
+        font-size: 20px;
+      }
+      .responsiveImage{
+        border-radius: 8px;
+        max-height: 39.2%;
+        max-width: 61.8%
+      }
+      .lessonListItem{
+        list-style-type: none;
+        text-align: left
+      }
+      .lessonListIndex{
+        display: inline-block;
+        color: #FFF;
+        font-weight: bold;
+        background-color: #8498C3;
+        border-radius: 100%;
+        text-align: center;
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+        margin: 20px auto;
+    }
+    .lessonListLink{
+      color: #00132E;
+      display: block;
+      text-decoration: none;
+      width: 100%;
+      padding: 15px 50px 15px 30px;
+      background: #FFFFFF;
+      box-shadow: 0px 7px 24px rgba(0,58,102,0.0970901);
+      border-radius: 8px;
+      margin-bottom: 15px;
+      cursor: pointer;
+    }
+    @media screen and (max-width:768px) {
+  body{
+    text-align: center;
+    font-size: 1.5em
+  }
+  .bigButton{
+    display: block
+  }
+    }
+    @media screen and (max-width:414px) {
+      body{
+        text-align: center
+      }
+      .lessonListIndex{
+        width: 48px;
+        height: 48px;
+        line-height: 48px;
+        font-size: 1.5em
+
+    }
+    .lessonListLink{
+      width: 100%;
+      padding: 30px 100px 30px 100px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+        }
+      
+      </style>
+      <div class="header">
+      <button class= "button"><a href="../" class>${
+        "Back to " + levelH1.slice(0, 2).toUpperCase()
+      }</a></button>
+      </div>
+      
+      <div class= "flexDiv">
+      <div class= "leftDiv">
+      <h1 class= "lessonHeader" >${
+        lessonH1[0].toUpperCase() + lessonH1.slice(1)
+      } - ${levelH1[0].toUpperCase() + levelH1.slice(1)}</h1>
+            <p>${p}</p>
+      <img src=${lessonImg} class="responsiveImage">
+      </div>
+      <div class= "rightDiv">
+       <ol class="lessonList">
+      </ol>
+      </div>
+      </div>
+      <button class= "bigButton"><a href="../../../../${exercicePath}/first/">Go to "1.${lessonListData[0].replaceAll(
+        '"',
+        ""
+      )}"</a></button>
+      <button class= "bigButton"><a href="../../../../../${videoAndTranscriptionPath}">Watch video with transcription</a></button>
+      
+      <script>
+      let lessonListElm = document.querySelector(".lessonList")
+      lessonListData = [${lessonListData}]
+      lessonListData.map((value, index)=>{
+        let listItem = document.createElement("li")
+        let listIndex = document.createElement("span")
+        let listLink = document.createElement("a")
+        listItem.classList.add("lessonListItem")
+        listIndex.classList.add("lessonListIndex")
+        listIndex.innerText = index + 1
+        listLink.classList.add("lessonListLink")
+        listLink.innerText = value
+        if(index == 0){
+          listLink.setAttribute("href", "../../../../${exercicePath}/first/")
+        } else{
+          listLink.addEventListener("click", () =>{
+            alert("In progress...")
+          })
+        }
+        listItem.appendChild(listIndex)
+        listItem.appendChild(listLink)
+        lessonListElm.appendChild(listItem)
+      })
+      </script>
+
+      `);
       const lessonHtml = $.html();
       fs.writeFile(`${folderPath}/index.html`, lessonHtml, (error) =>
         console.log(error || "")
@@ -133,18 +314,22 @@ function allHappenInHere() {
               let ajaxId = $(
                 "div.field--type-entity-reference > div.field--item"
               ).attr("data-media-id");
-              $("span.loader_message").replaceWith(
-                `<button><a style:"text-decoration:none;" href='../../../../${videoAndTranscriptionPath}/index.html'>Watch the video with transcription</a></button>`
-              );
+              $("div.exercice-header-inner").replaceWith("")
+              $("a.visually-hidden.focusable.skip-link").replaceWith("")
               $("footer.exercice-footer").replaceWith("");
               $("div.group-right").replaceWith("");
+              $("div.consigne-default").replaceWith("")
+              $("div.field field--name-dynamic-token-fieldnode-titre-exercice field--type-ds field--label-hidden field--item").replaceWith("")
+              $("span.first-parent").replaceWith("")
+              $("span.title-exo-num").replaceWith("")
+              $("div.media").replaceWith("")
               const exerciceHtml = $.html();
               //get exrcice items
               axios
                 .get(`https://apprendre.tv5monde.com/fr/exercice/${exerciceId}`)
                 .then((respond) => {
                   let html = respond.data
-                    .replaceAll("[–]", "<b>–</b>")
+                    .replaceAll("[–]", "")
                     .replaceAll("{", "<span>")
                     .replaceAll("}", "</span>")
                     .replaceAll("<script", "<!--<script")
@@ -183,9 +368,25 @@ function allHappenInHere() {
                     });
                   }
 
-                  fs.writeFile(
+                  fs.writeFileSync(
                     `${exercicePath}/first/JS/main.js`,
                     ` 
+var windowInnerWidth  = document.documentElement.clientWidth;
+setInterval(()=>{
+windowInnerWidth  = document.documentElement.clientWidth;
+if(windowInnerWidth < 414){
+  instrucBtnHTML.innerHTML = "?"
+} else {
+  instrucBtnHTML.innerHTML = "Comment faire l'exercice ?"
+}
+},5000)                    
+var helpBtn = document.querySelector(".btn-exo-help")
+var helpImgsDiv = document.querySelector(".galerie-image")
+helpImgsDiv.classList.toggle("hide")
+
+helpBtn.addEventListener("click",()=>{
+  helpImgsDiv.classList.toggle("hide")
+})                   
               var exerciceSolution = "${exerciceSolution}
               var exerciceGood = "${exerciceGood}"
               var exerciceBad = "${exerciceBad}"
@@ -226,26 +427,8 @@ document.querySelectorAll(".selector").forEach((value) => {
     }
   });
 });
-document.querySelector(".exo-actions").style.display = "flex";
-document.querySelector(".exo-actions").style.justifyContent = "space-between";
 const instrucBtnHTML = document.querySelector(".btn-exo-help");
 const validerBtnHTML = document.querySelector(".btn-exo-validate");
-validerBtnHTML.style.whiteSpace = "nowrap";
-validerBtnHTML.style.border = "none";
-validerBtnHTML.style.padding = "12px 55px";
-validerBtnHTML.style.borderRadius = "8px";
-validerBtnHTML.style.color = "#fff";
-validerBtnHTML.style.fontWeight = "bold";
-validerBtnHTML.style.background =
-  "linear-gradient(224.47deg,#00BAD8 0%,#018BF1 99.09%)";
-validerBtnHTML.style.position = "relative";
-validerBtnHTML.style.cursor = "pointer";
-instrucBtnHTML.style.whiteSpace = "nowrap";
-instrucBtnHTML.style.border = "none";
-instrucBtnHTML.style.padding = "12px 48px";
-instrucBtnHTML.style.borderRadius = "8px";
-instrucBtnHTML.style.color = "#002152";
-instrucBtnHTML.style.fontWeight = "bold";
 const exerciceContainerHTML = document.querySelector(".field-items");
 const resultContainerHTML = document.createElement("div");
 const resultTitleHTML = document.createElement("div");
@@ -352,9 +535,120 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                   fs.writeFile(
                     `${exercicePath}/first/index.html`,
                     `
-                
+                <style>
+                html, .page-exercice{
+                  background-color: #F2F9FE;
+                }
+                body{
+                  background-color: #F2F9FE;
+                  color: #21254F;
+                  font-family: Arial, Helvetica, sans-serif;
+                  font-size: 1.2em;
+                  text-align: center
+                }
+                video{
+                  width: 100%
+                }
+                .pageHeader{
+                  font-size: 3em;
+                  margin: 30px auto;
+                  text-align: center;
+                  color: #21254F;
+                }
+                .header{
+                  font-size: 2em;
+                  margin: 30px auto;
+                  text-align: center;
+                  color: #21254F;
+                }
+                .button{
+                  white-space: nowrap;
+                  border: none;
+                  padding: 12px 55px;
+                  border-radius: 8px;
+                  color: rgb(255, 255, 255);
+                  font-weight: bold;
+                  background: linear-gradient(224.47deg, rgb(0, 186, 216) 0%, rgb(1, 139, 241) 99.09%);
+                  cursor: pointer;
+                }
+                .button > a{
+                  color: white;
+                  text-decoration: none;
+                }
+                .dialog-off-canvas-main-canvas{
+                  margin: 20px auto
+                }
+                .media{
+                  display: block
+                }
+                .videoButton{
+                  margin: 35px 50%;
+                  transform: translateX(-50%);
+                  
+                }
+                .field--name-field-exercice-zac{
+                  color: #21254F;
+                  border: 1px solid black;
+                  padding: 20px 50px;
+                  margin: 35px auto
+                }
+                .img-responsive{
+                  display: inline-block
+                }
+                .hide{
+                  display: none
+                }
+                .field--name-field-exercice-zac > div > div > *{
+                  margin: auto 10px
+                }
+                .exo-actions{
+                  display: flex; 
+                  justify-content: space-between
+                }
+                .btn-exo-validate{
+                  white-space : nowrap;
+                  border : none;
+                  padding : 12px 55px;
+                  border-radius : 8px;
+                  color : #fff;
+                  font-weight : bold;
+                  background :
+                    linear-gradient(224.47deg,#00BAD8 0%,#018BF1 99.09%);
+                /*  validerBtnHTML.style.position : relative; */
+                  cursor : pointer;
+                }
+                .btn-exo-help{
+                  white-space : nowrap;
+                  border : none;
+                  padding : 12px 48px;
+                  border-radius : 8px;
+                  color : #002152;
+                  font-weight : bold;
+                  cursor: pointer;
+                }
+                @media screen and(max-width: 768px){
+                  .dialog-off-canvas-main-canvas{
+                    margin: 30px auto
+                  }
+                  .exo-actions > *{
+                    flex-basis: 100%
+                  }
+                }
+                  @media screen and(max-width: 600px){
+                    button{
+                      padding: 12px 30px;
+                    }
+                    .videoButton{
+                      padding: 12px 30px;
+                    }
+                }
+                </style>
+                <button class="button"><a href="../../../../${folderPath}">Back</a></button>
+                <h1 class="pageHeader">${lessonListData[0]}</h1>
                 ${exerciceHtml}
+                <button class="button videoButton"><a style:"text-decoration:none;" href='../../../../${videoAndTranscriptionPath}/index.html'>Watch the video with transcription</a></button>
                 <script src="./JS/main.js" defer></script>
+                <h1 class="header">Exercice:</h1>
                 ${exerciceItem}
                 `,
                     (error) => console.log(error || "")
@@ -434,12 +728,92 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                       fs.writeFile(
                         `${videoAndTranscriptionPath}/index.html`,
                         `
-            <video width: "100%" controls>
+                        <style>
+                        body{
+                          text-align: center;
+                          background-color: #F2F9FE;
+                          color: #21254F;
+                          font-family: Arial, Helvetica, sans-serif;
+                          font-size: 1.2em;
+                        }
+                        video{
+                          border-radius: 8px
+                        }
+                        .flexBox{
+                          display: flex;
+                        }
+                        .flexBox > div{
+                          border-radius: 8px;
+                          margin: 20px;
+                          background-color: #FFFFFF;
+                        }
+                        .videoDiv{
+                          height: fit-content;
+                          block-size: fit-content;
+                        }
+                        #transcriptionContent{
+                          text-align: left;
+                          width: 100%;
+                          height: 480px;
+                          overflow-y: scroll;
+                        }
+                        #transcriptionContent > b{
+                          display: block
+                        }
+                        #transcriptionContent > em{
+                          display: inline-block
+                        }
+                        .button{
+                          white-space: nowrap;
+                          border: none;
+                          padding: 12px 55px;
+                          border-radius: 8px;
+                          color: rgb(255, 255, 255);
+                          font-weight: bold;
+                          background: linear-gradient(224.47deg, rgb(0, 186, 216) 0%, rgb(1, 139, 241) 99.09%);
+                          cursor: pointer;
+                  
+                        }
+                        .button > a{
+                          color: white;
+                          text-decoration: none;
+                          font-size: 20px;
+                        }
+                        @media screen and (max-width:1024px) {
+                          .flexBox{
+                            flex-direction: column
+                          }
+                          .flexBox > div{
+                            margin: 20px auto
+                          }
+                          #transcriptionContent{
+                            height: 600px;
+                          }
+                          .video{
+                           flex-basis: 100%
+                          }
+                          @media screen and (max-width:600px) {
+                            #transcriptionContent{
+                              height: 100%;
+                            }
+
+                            }
+
+                        </style>
+                        <div class="flexBox">
+                        <div class="videoDiv">
+                        <video controls class="video">
           <source src="../videos/${lessonPath}-ex1.mp4" type="video/mp4"">
           </video>
+                        </div>
+            
           <div id="transcriptionContent">
+          <h1>Transcription:</h1>
 
           </div>
+                        </div>
+                        <button class="button"><a href="../../../../.${folderPath}">Back</a></button>
+                        
             <script src="./main.js"></script>
             <script src="../../../../../videoANDsub.js" defer></script>
             `,
@@ -627,6 +1001,7 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                   fs.writeFile(
                     `${exercicePath}/first/index.html`,
                     `
+
                 ${exerciceHtml}
                 <script src="./JS/main.js" defer></script>
                 ${exerciceItem}
@@ -687,7 +1062,7 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                             accumulator.push({
                               type: "word",
                               tagName: item.name,
-                              text: item.children[0].data,
+                              text: item.data,
                             });
                           }
                         });
@@ -708,12 +1083,92 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                       fs.writeFile(
                         `${videoAndTranscriptionPath}/index.html`,
                         `
-            <video width: "100%" controls>
+                        <style>
+                        body{
+                          text-align: center;
+                          background-color: #F2F9FE;
+                          color: #21254F;
+                          font-family: Arial, Helvetica, sans-serif;
+                          font-size: 1.2em;
+                        }
+                        video{
+                          border-radius: 8px
+                        }
+                        .flexBox{
+                          display: flex;
+                        }
+                        .flexBox > div{
+                          border-radius: 8px;
+                          margin: 20px;
+                          background-color: #FFFFFF;
+                        }
+                        .videoDiv{
+                          height: fit-content;
+                          block-size: fit-content;
+                        }
+                        #transcriptionContent{
+                          text-align: left;
+                          width: 100%;
+                          height: 480px;
+                          overflow-y: scroll;
+                        }
+                        #transcriptionContent > b{
+                          display: block
+                        }
+                        #transcriptionContent > em{
+                          display: inline-block
+                        }
+                        .button{
+                          white-space: nowrap;
+                          border: none;
+                          padding: 12px 55px;
+                          border-radius: 8px;
+                          color: rgb(255, 255, 255);
+                          font-weight: bold;
+                          background: linear-gradient(224.47deg, rgb(0, 186, 216) 0%, rgb(1, 139, 241) 99.09%);
+                          cursor: pointer;
+                  
+                        }
+                        .button > a{
+                          color: white;
+                          text-decoration: none;
+                          font-size: 20px;
+                        }
+                        @media screen and (max-width:1024px) {
+                          .flexBox{
+                            flex-direction: column
+                          }
+                          .flexBox > div{
+                            margin: 20px auto
+                          }
+                          #transcriptionContent{
+                            height: 600px;
+                          }
+                          .video{
+                           flex-basis: 100%
+                          }
+                          @media screen and (max-width:600px) {
+                            #transcriptionContent{
+                              height: 100%;
+                            }
+
+                            }
+
+                        </style>
+                        <div class="flexBox">
+                        <div class="videoDiv">
+                        <video controls class="video">
           <source src="../videos/${lessonPath}-ex1.mp4" type="video/mp4"">
           </video>
+                        </div>
+            
           <div id="transcriptionContent">
+          <h1>Transcription:</h1>
 
           </div>
+                        </div>
+                        <button class="button"><a href="../../../../.${folderPath}">Back</a></button>
+                        
             <script src="./main.js"></script>
             <script src="../../../../../videoANDsub.js" defer></script>
             `,
