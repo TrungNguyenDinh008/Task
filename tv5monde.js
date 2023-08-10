@@ -704,11 +704,19 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                               end: item.attribs.end,
                             });
                           } else {
-                            accumulator.push({
+                            if(item.data === undefined){
+                              accumulator.push({
+                                type: "word",
+                                tagName: item.name,
+                                text: item.children[0].data,
+                              });
+                            } else {
+                              accumulator.push({
                               type: "word",
                               tagName: item.name,
-                              text: item.children[0].data,
+                              text: item.data,
                             });
+                            }
                           }
                         });
                       for (var sentence of data.videoTranscription) {
@@ -966,6 +974,15 @@ for (let i = 0; i < numberOfInstructImage; i++) {
               );
               $("footer.exercice-footer").replaceWith("");
               $("div.group-right").replaceWith("");
+              $("div.exercice-header-inner").replaceWith("")
+              $("a.visually-hidden.focusable.skip-link").replaceWith("")
+              $("footer.exercice-footer").replaceWith("");
+              $("div.group-right").replaceWith("");
+              $("div.consigne-default").replaceWith("")
+              $("div.field field--name-dynamic-token-fieldnode-titre-exercice field--type-ds field--label-hidden field--item").replaceWith("")
+              $("span.first-parent").replaceWith("")
+              $("span.title-exo-num").replaceWith("")
+              $("div.media").replaceWith("")
               const exerciceHtml = $.html();
               //get exrcice items
               axios
@@ -1001,10 +1018,120 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                   fs.writeFile(
                     `${exercicePath}/first/index.html`,
                     `
-
-                ${exerciceHtml}
-                <script src="./JS/main.js" defer></script>
-                ${exerciceItem}
+                    <style>
+                    html, .page-exercice{
+                      background-color: #F2F9FE;
+                    }
+                    body{
+                      background-color: #F2F9FE;
+                      color: #21254F;
+                      font-family: Arial, Helvetica, sans-serif;
+                      font-size: 1.2em;
+                      text-align: center
+                    }
+                    video{
+                      width: 100%
+                    }
+                    .pageHeader{
+                      font-size: 3em;
+                      margin: 30px auto;
+                      text-align: center;
+                      color: #21254F;
+                    }
+                    .header{
+                      font-size: 2em;
+                      margin: 30px auto;
+                      text-align: center;
+                      color: #21254F;
+                    }
+                    .button{
+                      white-space: nowrap;
+                      border: none;
+                      padding: 12px 55px;
+                      border-radius: 8px;
+                      color: rgb(255, 255, 255);
+                      font-weight: bold;
+                      background: linear-gradient(224.47deg, rgb(0, 186, 216) 0%, rgb(1, 139, 241) 99.09%);
+                      cursor: pointer;
+                    }
+                    .button > a{
+                      color: white;
+                      text-decoration: none;
+                    }
+                    .dialog-off-canvas-main-canvas{
+                      margin: 20px auto
+                    }
+                    .media{
+                      display: block
+                    }
+                    .videoButton{
+                      margin: 35px 50%;
+                      transform: translateX(-50%);
+                      
+                    }
+                    .field--name-field-exercice-zac{
+                      color: #21254F;
+                      border: 1px solid black;
+                      padding: 20px 50px;
+                      margin: 35px auto
+                    }
+                    .img-responsive{
+                      display: inline-block
+                    }
+                    .hide{
+                      display: none
+                    }
+                    .field--name-field-exercice-zac > div > div > *{
+                      margin: auto 10px
+                    }
+                    .exo-actions{
+                      display: flex; 
+                      justify-content: space-between
+                    }
+                    .btn-exo-validate{
+                      white-space : nowrap;
+                      border : none;
+                      padding : 12px 55px;
+                      border-radius : 8px;
+                      color : #fff;
+                      font-weight : bold;
+                      background :
+                        linear-gradient(224.47deg,#00BAD8 0%,#018BF1 99.09%);
+                    /*  validerBtnHTML.style.position : relative; */
+                      cursor : pointer;
+                    }
+                    .btn-exo-help{
+                      white-space : nowrap;
+                      border : none;
+                      padding : 12px 48px;
+                      border-radius : 8px;
+                      color : #002152;
+                      font-weight : bold;
+                      cursor: pointer;
+                    }
+                    @media screen and(max-width: 768px){
+                      .dialog-off-canvas-main-canvas{
+                        margin: 30px auto
+                      }
+                      .exo-actions > *{
+                        flex-basis: 100%
+                      }
+                    }
+                      @media screen and(max-width: 600px){
+                        button{
+                          padding: 12px 30px;
+                        }
+                        .videoButton{
+                          padding: 12px 30px;
+                        }
+                    }
+                    </style>
+                    <button class="button"><a href="../../../../${folderPath}">Back</a></button>
+                    <h1 class="pageHeader">${lessonListData[0]}</h1>
+                    ${exerciceHtml}
+                    <button class="button videoButton"><a style:"text-decoration:none;" href='../../../../${videoAndTranscriptionPath}/index.html'>Watch the video with transcription</a></button>
+                    <script src="./JS/main.js" defer></script>
+                    <h1 class="header">Exercice:</h1>
                 `,
                     (error) => console.log(error || "")
                   );
@@ -1059,11 +1186,19 @@ for (let i = 0; i < numberOfInstructImage; i++) {
                               end: item.attribs.end,
                             });
                           } else {
-                            accumulator.push({
+                            if(item.data === undefined){
+                              accumulator.push({
+                                type: "word",
+                                tagName: item.name,
+                                text: item.children[0].data,
+                              });
+                            } else {
+                              accumulator.push({
                               type: "word",
                               tagName: item.name,
                               text: item.data,
                             });
+                            }
                           }
                         });
                       for (var sentence of data.videoTranscription) {
